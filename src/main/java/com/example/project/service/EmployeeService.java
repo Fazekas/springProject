@@ -6,9 +6,12 @@ import com.example.project.model.Employee;
 import com.example.project.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmployeeService {
@@ -20,13 +23,13 @@ public class EmployeeService {
     private EmployeeMapper employeeMapper;
 
     public Employee save(Employee employee) {
+        Assert.hasText(employee.getFirstName(), "first name cannot be null");
+        Assert.hasText(employee.getLastName(), "last name cannot be null");
         EmployeeEntity employeeEntity = employeeMapper.modelToEntity(employee);
 
         EmployeeEntity save = employeeRepository.save(employeeEntity);
 
-        Employee employee1 = employeeMapper.entityToModel(save);
-
-        return employee1;
+        return employeeMapper.entityToModel(save);
     }
 
     public List<Employee> findAll() {
@@ -36,5 +39,16 @@ public class EmployeeService {
         all.forEach(emp -> employees.add(employeeMapper.entityToModel(emp)));
 
         return employees;
+    }
+
+    public Employee findById(int id) {
+        Optional<EmployeeEntity> optionalEmployeeEntity = employeeRepository.findById(id);
+
+        if (optionalEmployeeEntity.isPresent()) {
+            Employee employee = employeeMapper.entityToModel(optionalEmployeeEntity.get());
+            return employee;
+        } else {
+            throw new EntityNotFoundException();
+        }
     }
 }
